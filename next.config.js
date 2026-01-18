@@ -1,12 +1,13 @@
 /** @type {import('next').NextConfig} */
-const repo = process.env.NEXT_PUBLIC_GH_REPO || "";
-const basePath = repo ? `/${repo}` : "";
-
 const nextConfig = {
-  output: "export",
-  images: { unoptimized: true },
-  basePath,
-  assetPrefix: basePath ? `${basePath}/` : undefined
+  output: 'export',
+  
+  // 👇 这里我们直接写死你的仓库名，不再依赖环境变量
+  basePath: '/reading-kg-pwa',
+  
+  images: {
+    unoptimized: true,
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
