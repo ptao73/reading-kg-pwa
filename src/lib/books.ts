@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Book, BookInsert, BookUpdate } from "@/types/database";
+import type { Book, BookUpdate } from "@/types/database";
 
 export async function createBook(
   title: string,
@@ -9,7 +9,7 @@ export async function createBook(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const book: BookInsert = {
+  const book = {
     user_id: user.id,
     title,
     author: author ?? null,
@@ -28,7 +28,7 @@ export async function createBook(
     return null;
   }
 
-  return data;
+  return data as Book;
 }
 
 export async function getBooks(): Promise<Book[]> {
@@ -43,7 +43,7 @@ export async function getBooks(): Promise<Book[]> {
     return [];
   }
 
-  return data;
+  return (data ?? []) as Book[];
 }
 
 export async function getBook(id: string): Promise<Book | null> {
@@ -58,7 +58,7 @@ export async function getBook(id: string): Promise<Book | null> {
     return null;
   }
 
-  return data;
+  return data as Book;
 }
 
 export async function updateBook(
@@ -77,14 +77,13 @@ export async function updateBook(
     return null;
   }
 
-  return data;
+  return data as Book;
 }
 
 export async function mergeBooks(
   sourceId: string,
   targetId: string
 ): Promise<boolean> {
-  // Set merged_into on source book to point to target
   const { error } = await supabase
     .from("books")
     .update({ merged_into: targetId })
@@ -112,5 +111,5 @@ export async function searchBooks(query: string): Promise<Book[]> {
     return [];
   }
 
-  return data;
+  return (data ?? []) as Book[];
 }

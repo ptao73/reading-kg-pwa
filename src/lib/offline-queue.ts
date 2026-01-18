@@ -1,11 +1,9 @@
-import type { ReadingEventInsert, BookInsert } from "@/types/database";
-
 const QUEUE_KEY = "reading_kg_offline_queue";
 
 export interface OfflineAction {
   id: string;
   type: "create_event" | "create_book";
-  payload: ReadingEventInsert | BookInsert;
+  payload: Record<string, unknown>;
   timestamp: number;
   retries?: number;
 }

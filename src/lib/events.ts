@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "./supabase";
-import type { ReadingEvent, ReadingEventInsert, ValidReadingEvent } from "@/types/database";
+import type { ReadingEvent, ValidReadingEvent } from "@/types/database";
 import { addToOfflineQueue, OfflineAction } from "./offline-queue";
 
 export async function createReadingEvent(
@@ -12,7 +12,7 @@ export async function createReadingEvent(
   if (!user) return null;
 
   const clientEventId = uuidv4();
-  const event: ReadingEventInsert = {
+  const event = {
     user_id: user.id,
     book_id: bookId,
     event_type: eventType,
@@ -43,7 +43,7 @@ export async function createReadingEvent(
     return null;
   }
 
-  return data;
+  return data as ReadingEvent;
 }
 
 export async function correctEvent(
@@ -54,15 +54,6 @@ export async function correctEvent(
   if (!user) return null;
 
   const clientEventId = uuidv4();
-  const correction: ReadingEventInsert = {
-    user_id: user.id,
-    book_id: "", // Will be fetched from target event
-    event_type: "correction",
-    occurred_at: new Date().toISOString(),
-    completion: newCompletion,
-    target_event_id: targetEventId,
-    client_event_id: clientEventId,
-  };
 
   // Get target event to copy book_id
   const { data: targetEvent } = await supabase
@@ -72,7 +63,16 @@ export async function correctEvent(
     .single();
 
   if (!targetEvent) return null;
-  correction.book_id = targetEvent.book_id;
+
+  const correction = {
+    user_id: user.id,
+    book_id: (targetEvent as { book_id: string }).book_id,
+    event_type: "correction" as const,
+    occurred_at: new Date().toISOString(),
+    completion: newCompletion,
+    target_event_id: targetEventId,
+    client_event_id: clientEventId,
+  };
 
   const { data, error } = await supabase
     .from("reading_events")
@@ -85,7 +85,7 @@ export async function correctEvent(
     return null;
   }
 
-  return data;
+  return data as ReadingEvent;
 }
 
 export async function getValidEvents(
@@ -104,7 +104,7 @@ export async function getValidEvents(
     return [];
   }
 
-  return data as ValidReadingEvent[];
+  return (data ?? []) as ValidReadingEvent[];
 }
 
 export async function getRecentEvents(limit = 10): Promise<ValidReadingEvent[]> {
@@ -119,5 +119,5 @@ export async function getRecentEvents(limit = 10): Promise<ValidReadingEvent[]> 
     return [];
   }
 
-  return data as ValidReadingEvent[];
+  return (data ?? []) as ValidReadingEvent[];
 }
