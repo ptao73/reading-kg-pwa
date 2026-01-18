@@ -1,0 +1,83 @@
+-- 文件路径: supabase/migrations/20240101000000_initial_schema.sql
+-- Reading KG PWA - Initial Schema
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ENUM: reading_event_type
+CREATE TYPE reading_event_type AS ENUM ('finished', 'ended', 'correction');
+
+-- TABLE: books
+CREATE TABLE books (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    author TEXT,
+    isbn TEXT,
+    merged_into UUID REFERENCES books(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT no_self_merge CHECK (merged_into IS NULL OR merged_into != id)
+);
+
+CREATE INDEX idx_books_user_id ON books(user_id);
+CREATE INDEX idx_books_merged_into ON books(merged_into) WHERE merged_into IS NOT NULL;
+
+-- TABLE: reading_events (APPEND-ONLY)
+CREATE TABLE reading_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    event_type reading_event_type NOT NULL,
+    occurred_at TIMESTAMPTZ NOT NULL,
+    completion INTEGER NOT NULL,
+    target_event_id UUID REFERENCES reading_events(id) ON DELETE SET NULL,
+    client_event_id UUID NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT finished_must_be_100 CHECK (event_type != 'finished' OR completion = 100),
+    CONSTRAINT ended_must_be_partial CHECK (event_type != 'ended' OR (completion >= 0 AND completion < 100)),
+    CONSTRAINT correction_no_completion CHECK (event_type != 'correction' OR completion = 0),
+    CONSTRAINT correction_requires_target CHECK (event_type != 'correction' OR target_event_id IS NOT NULL),
+    CONSTRAINT correction_no_self_target CHECK (target_event_id IS NULL OR target_event_id != id),
+    CONSTRAINT unique_client_event UNIQUE (user_id, client_event_id)
+);
+
+CREATE INDEX idx_reading_events_user_id ON reading_events(user_id);
+CREATE INDEX idx_reading_events_book_id ON reading_events(book_id);
+CREATE INDEX idx_reading_events_occurred_at ON reading_events(occurred_at);
+
+-- VIEW: valid_reading_events
+CREATE VIEW valid_reading_events AS
+SELECT re.*
+FROM reading_events re
+WHERE re.event_type IN ('finished', 'ended')
+  AND NOT EXISTS (
+      SELECT 1 FROM reading_events correction
+      WHERE correction.event_type = 'correction'
+        AND correction.target_event_id = re.id
+        AND correction.user_id = re.user_id
+  );
+
+-- RLS POLICIES
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reading_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY books_select_own ON books FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY books_insert_own ON books FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY books_update_own ON books FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY reading_events_select_own ON reading_events FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY reading_events_insert_own ON reading_events FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Trigger
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_books_updated_at BEFORE UPDATE ON books
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
