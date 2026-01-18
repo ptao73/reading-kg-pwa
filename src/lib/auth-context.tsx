@@ -44,10 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
-    const redirectUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/auth/callback`
-        : undefined;
+    const redirectUrl = 'https://ptao73.github.io/reading-kg-pwa/';
 
     await supabase.auth.signInWithOAuth({
       provider: "google",
