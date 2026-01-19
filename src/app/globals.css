@@ -880,11 +880,26 @@ input[type="text"]:focus,
 }
 
 .btn-back,
-.btn-toc {
+.btn-toc,
+.btn-annotate,
+.btn-annotations {
   background: transparent;
   color: var(--text);
   padding: 0.5rem;
   font-size: 1.25rem;
+}
+
+.reader-header-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-annotate {
+  color: var(--primary);
+}
+
+.btn-annotations {
+  font-size: 0.9rem;
 }
 
 .reader-title {
@@ -1525,4 +1540,276 @@ input[type="text"]:focus,
 .streak-day-today {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
+}
+
+/* ============================= */
+/* Annotation Styles             */
+/* ============================= */
+
+/* Annotation Toolbar */
+.annotation-toolbar {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  z-index: 300;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+}
+
+.annotation-toolbar-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.annotation-btn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  background: var(--bg-input);
+  color: var(--text);
+}
+
+.annotation-btn-highlight {
+  color: #000;
+}
+
+.annotation-btn-bookmark {
+  background: var(--primary);
+  color: white;
+}
+
+.annotation-btn-note {
+  background: var(--bg-input);
+}
+
+.annotation-btn-close {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.annotation-color-picker {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.color-swatch.active {
+  border-color: var(--text);
+}
+
+.annotation-note-input {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.annotation-note-input textarea {
+  width: 100%;
+  min-width: 250px;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+.annotation-note-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+/* Annotation List */
+.annotation-list-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.annotation-list {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.annotation-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.annotation-list-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.annotation-list-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.annotation-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.annotation-section {
+  margin-bottom: 1.5rem;
+}
+
+.annotation-section:last-child {
+  margin-bottom: 0;
+}
+
+.annotation-section h4 {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.annotation-item {
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.annotation-item:last-child {
+  margin-bottom: 0;
+}
+
+.annotation-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.annotation-position {
+  font-size: 0.8rem;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.annotation-position:hover {
+  text-decoration: underline;
+}
+
+.annotation-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.annotation-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.annotation-action-btn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.annotation-action-btn:hover {
+  color: var(--text);
+}
+
+.annotation-action-delete:hover {
+  color: var(--danger);
+}
+
+.annotation-note {
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.annotation-edit textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.annotation-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--radius);
+}
+
+.btn-secondary {
+  background: var(--bg-input);
+  color: var(--text);
+}
+
+/* Highlighted text in reader */
+.reader-segment.highlighted {
+  position: relative;
+}
+
+.reader-segment.highlighted::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -4px;
+  right: -4px;
+  bottom: 0;
+  border-radius: 2px;
+  z-index: -1;
+}
+
+.epub-segment.highlighted,
+.reader-segment.highlighted {
+  background: rgba(254, 240, 138, 0.3);
 }

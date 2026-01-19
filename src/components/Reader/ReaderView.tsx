@@ -10,12 +10,16 @@ import { TxtReader } from "./TxtReader";
 import { EpubReader } from "./EpubReader";
 import { PdfReader } from "./PdfReader";
 import { ReaderControls } from "./ReaderControls";
+import { AnnotationToolbar } from "./AnnotationToolbar";
+import { AnnotationList } from "./AnnotationList";
 import { startReadingSession, endReadingSession } from "@/lib/session-tracker";
+import { getAnnotations } from "@/lib/annotations";
 import type {
   ContentResource,
   ParsedContent,
   Position,
   ReadingProgress,
+  Annotation,
 } from "@/types/content";
 import type { Book } from "@/types/database";
 
@@ -37,6 +41,10 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
   const [theme, setTheme] = useState<ReaderTheme>("dark");
   const [showControls, setShowControls] = useState(false);
   const [showToc, setShowToc] = useState(false);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [showAnnotations, setShowAnnotations] = useState(false);
+  const [showAnnotationToolbar, setShowAnnotationToolbar] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState<Position>({ chapter: 0, segment: 0 });
 
   // Load content and progress on mount
   useEffect(() => {
@@ -133,6 +141,38 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
     };
   }, [resource.id]);
 
+  // Load annotations
+  useEffect(() => {
+    async function loadAnnotations() {
+      const ann = await getAnnotations(resource.id);
+      setAnnotations(ann);
+    }
+    loadAnnotations();
+  }, [resource.id]);
+
+  // Handle annotation created
+  const handleAnnotationCreated = (annotation: Annotation) => {
+    setAnnotations((prev) => [...prev, annotation]);
+  };
+
+  // Handle annotation deleted
+  const handleAnnotationDeleted = (id: string) => {
+    setAnnotations((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  // Handle annotation updated
+  const handleAnnotationUpdated = (updated: Annotation) => {
+    setAnnotations((prev) =>
+      prev.map((a) => (a.id === updated.id ? updated : a))
+    );
+  };
+
+  // Navigate to annotation position
+  const handleNavigateToAnnotation = (position: Position) => {
+    setCurrentPosition(position);
+    setShowAnnotations(false);
+  };
+
   // Save progress to Supabase
   const saveProgress = useCallback(
     async (position: Position, percentage: number) => {
@@ -166,6 +206,9 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
   // Handle position change with debounce
   const handlePositionChange = useCallback(
     (position: Position, percentage: number) => {
+      // Update current position for annotation toolbar
+      setCurrentPosition(position);
+
       // Debounce save - only save every 2 seconds
       const timeout = setTimeout(() => {
         saveProgress(position, percentage);
@@ -238,13 +281,29 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
         className="reader-header"
         onClick={() => setShowControls(!showControls)}
       >
-        <button onClick={onClose} className="btn-back">
+        <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="btn-back">
           ←
         </button>
         <div className="reader-title">{book.title}</div>
-        <button onClick={() => setShowToc(!showToc)} className="btn-toc">
-          ☰
-        </button>
+        <div className="reader-header-actions">
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowAnnotationToolbar(!showAnnotationToolbar); }}
+            className="btn-annotate"
+            title="Add annotation"
+          >
+            +
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowAnnotations(!showAnnotations); }}
+            className="btn-annotations"
+            title="View annotations"
+          >
+            {annotations.length > 0 ? `📝${annotations.length}` : "📝"}
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); setShowToc(!showToc); }} className="btn-toc">
+            ☰
+          </button>
+        </div>
       </div>
 
       {/* Controls overlay */}
@@ -310,6 +369,28 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
           fileBuffer={pdfBuffer}
           initialPosition={progress?.current_position}
           onPositionChange={handlePositionChange}
+        />
+      )}
+
+      {/* Annotation Toolbar */}
+      {showAnnotationToolbar && (
+        <AnnotationToolbar
+          resourceId={resource.id}
+          currentPosition={currentPosition}
+          hasSelection={false}
+          onAnnotationCreated={handleAnnotationCreated}
+          onClose={() => setShowAnnotationToolbar(false)}
+        />
+      )}
+
+      {/* Annotation List */}
+      {showAnnotations && (
+        <AnnotationList
+          annotations={annotations}
+          onNavigate={handleNavigateToAnnotation}
+          onAnnotationDeleted={handleAnnotationDeleted}
+          onAnnotationUpdated={handleAnnotationUpdated}
+          onClose={() => setShowAnnotations(false)}
         />
       )}
 
