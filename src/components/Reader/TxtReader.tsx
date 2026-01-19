@@ -173,6 +173,3 @@ export function TxtReader({
     </div>
   );
 }
-
-// Export navigation helpers
-export { TxtReader };
