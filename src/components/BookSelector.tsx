@@ -9,6 +9,7 @@ import {
   saveToLibrary,
   type SearchResult,
 } from "@/lib/book-search";
+import { ISBNScanner } from "./ISBNScanner";
 
 interface BookSelectorProps {
   onSelect: (book: Book) => void;
@@ -27,6 +28,7 @@ export function BookSelector({ onSelect, onCancel }: BookSelectorProps) {
   const [newPublisher, setNewPublisher] = useState("");
   const [creating, setCreating] = useState(false);
   const [savingCandidate, setSavingCandidate] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Load recent books on mount
   useEffect(() => {
@@ -57,6 +59,17 @@ export function BookSelector({ onSelect, onCancel }: BookSelectorProps) {
     if (!query.trim()) return;
     setSearchingOnline(true);
     const result = await searchBooksAPI(query);
+    setSearchResult(result);
+    setSearchingOnline(false);
+  };
+
+  // Handle ISBN detected from scanner
+  const handleISBNDetected = async (isbn: string) => {
+    setShowScanner(false);
+    setQuery(isbn);
+    // Trigger online search for ISBN
+    setSearchingOnline(true);
+    const result = await searchBooksAPI(isbn);
     setSearchResult(result);
     setSearchingOnline(false);
   };
@@ -139,14 +152,23 @@ export function BookSelector({ onSelect, onCancel }: BookSelectorProps) {
         </button>
       </div>
 
-      <input
-        type="text"
-        placeholder="Search by title, author, or ISBN..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="search-input"
-        autoFocus
-      />
+      <div className="search-row">
+        <input
+          type="text"
+          placeholder="Search by title, author, or ISBN..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="search-input"
+          autoFocus
+        />
+        <button
+          className="btn-scan-isbn"
+          onClick={() => setShowScanner(true)}
+          title="Scan ISBN"
+        >
+          📷
+        </button>
+      </div>
 
       {loading && <div className="loading">Searching library...</div>}
 
@@ -316,6 +338,14 @@ export function BookSelector({ onSelect, onCancel }: BookSelectorProps) {
             {creating ? "Creating..." : "Create Book"}
           </button>
         </div>
+      )}
+
+      {/* ISBN Scanner */}
+      {showScanner && (
+        <ISBNScanner
+          onISBNDetected={handleISBNDetected}
+          onClose={() => setShowScanner(false)}
+        />
       )}
     </div>
   );
