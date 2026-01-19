@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { getParsedContent, getFile } from "@/lib/indexeddb";
 import { parseTxt } from "@/lib/import/txt-parser";
@@ -45,6 +45,8 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
   const [showAnnotations, setShowAnnotations] = useState(false);
   const [showAnnotationToolbar, setShowAnnotationToolbar] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<Position>({ chapter: 0, segment: 0 });
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPositionRef = useRef<{ position: Position; percentage: number } | null>(null);
 
   // Load content and progress on mount
   useEffect(() => {
@@ -92,7 +94,8 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
           }
         }
 
-        setContent(parsed);
+        // ✅ 修改后：如果 parsed 是 undefined，就用 null 代替
+          setContent(parsed ?? null);
 
         // 3. Load reading progress from Supabase
         const { data: progressData } = await supabase
@@ -208,16 +211,38 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
     (position: Position, percentage: number) => {
       // Update current position for annotation toolbar
       setCurrentPosition(position);
+      lastPositionRef.current = { position, percentage };
 
       // Debounce save - only save every 2 seconds
-      const timeout = setTimeout(() => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
         saveProgress(position, percentage);
-      }, 2000);
-
-      return () => clearTimeout(timeout);
+      }, 1500);
     },
     [saveProgress]
   );
+
+  // Flush pending save on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      if (lastPositionRef.current) {
+        const { position, percentage } = lastPositionRef.current;
+        saveProgress(position, percentage);
+      }
+    };
+  }, [saveProgress]);
+
+  // Keep toolbar position in sync with loaded progress
+  useEffect(() => {
+    if (progress?.current_position) {
+      setCurrentPosition(progress.current_position);
+    }
+  }, [progress?.current_position]);
 
   // Save settings
   const saveSettings = useCallback(

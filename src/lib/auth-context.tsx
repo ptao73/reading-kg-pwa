@@ -9,6 +9,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { startOfflineSync } from "./offline-sync";
 
 interface AuthContextType {
   user: User | null;
@@ -43,8 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const stopSync = startOfflineSync();
+    return () => stopSync();
+  }, []);
+
   const signInWithGoogle = async () => {
-    const redirectUrl = 'https://ptao73.github.io/reading-kg-pwa/';
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "/reading-kg-pwa";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const redirectUrl = `${origin}${basePath}/auth/callback`;
 
     await supabase.auth.signInWithOAuth({
       provider: "google",

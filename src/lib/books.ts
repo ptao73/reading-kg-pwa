@@ -1,5 +1,7 @@
+import { v4 as uuidv4 } from "uuid";
 import { supabase } from "./supabase";
 import type { Book, BookUpdate } from "@/types/database";
+import { addToOfflineQueue, type OfflineAction } from "./offline-queue";
 
 export async function createBook(
   title: string,
@@ -26,6 +28,15 @@ export async function createBook(
     .single();
 
   if (error) {
+    if (error.message.includes("network") || error.message.includes("failed to fetch")) {
+      const action: OfflineAction = {
+        id: uuidv4(),
+        type: "create_book",
+        payload: book,
+        timestamp: Date.now(),
+      };
+      addToOfflineQueue(action);
+    }
     console.error("Error creating book:", error);
     return null;
   }

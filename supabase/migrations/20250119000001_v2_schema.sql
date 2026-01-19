@@ -114,6 +114,10 @@ create table if not exists reading_sessions (
 create index if not exists ix_reading_sessions_user_date
 on reading_sessions (user_id, session_date desc);
 
+-- Unique constraint for session upsert
+create unique index if not exists uq_reading_sessions_user_start
+on reading_sessions (user_id, session_start);
+
 -- User settings table
 create table if not exists user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,

@@ -100,6 +100,15 @@ export function EpubReader({
     onPositionChange(position, percentage);
   }, [currentChapter, currentSegment, calculateProgress, onPositionChange]);
 
+  // Sync to externally provided position (e.g. loaded progress)
+  useEffect(() => {
+    if (!initialPosition) return;
+    const nextChapter = initialPosition.chapter ?? 0;
+    const nextSegment = initialPosition.segment ?? 0;
+    setCurrentChapter(nextChapter);
+    setCurrentSegment(nextSegment);
+  }, [initialPosition?.chapter, initialPosition?.segment]);
+
   // Touch handling for mobile swipe
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);

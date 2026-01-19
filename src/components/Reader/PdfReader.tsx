@@ -4,9 +4,17 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import type { Position } from "@/types/content";
 
-// Configure PDF.js worker
+// Configure PDF.js worker (bundle locally for offline support)
 if (typeof window !== "undefined") {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  try {
+    const worker = new Worker(
+      new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
+      { type: "module" }
+    );
+    pdfjsLib.GlobalWorkerOptions.workerPort = worker;
+  } catch {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "/reading-kg-pwa/pdf.worker.min.mjs";
+  }
 }
 
 interface PdfReaderProps {
@@ -64,6 +72,13 @@ export function PdfReader({
       }
     };
   }, [fileBuffer]);
+
+  // Sync to externally provided position (e.g. loaded progress)
+  useEffect(() => {
+    if (!initialPosition?.page || totalPages === 0) return;
+    const clamped = Math.min(Math.max(1, initialPosition.page), totalPages);
+    setCurrentPage(clamped);
+  }, [initialPosition?.page, totalPages]);
 
   // Render current page
   useEffect(() => {

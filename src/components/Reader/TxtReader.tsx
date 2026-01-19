@@ -115,6 +115,12 @@ export function TxtReader({
     }
   }, [currentChapter, currentSegment]);
 
+  // Sync to externally provided position (e.g. loaded progress)
+  useEffect(() => {
+    if (!initialPosition) return;
+    updatePosition(initialPosition.chapter ?? 0, initialPosition.segment ?? 0);
+  }, [initialPosition?.chapter, initialPosition?.segment, updatePosition]);
+
   const currentChapterData = content.chapters[currentChapter];
   if (!currentChapterData) {
     return <div className="reader-empty">No content available</div>;

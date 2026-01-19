@@ -9,9 +9,18 @@ import type {
   ChapterInfo,
 } from "@/types/content";
 
-// Configure PDF.js worker (use CDN for browser compatibility)
+// Configure PDF.js worker (bundle locally for offline support)
 if (typeof window !== "undefined") {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  try {
+    const worker = new Worker(
+      new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
+      { type: "module" }
+    );
+    pdfjsLib.GlobalWorkerOptions.workerPort = worker;
+  } catch {
+    // Fallback to public worker asset if module workers are unsupported
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "/reading-kg-pwa/pdf.worker.min.mjs";
+  }
 }
 
 // ============================================

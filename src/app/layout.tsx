@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/lib/auth-context";
+import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Reading KG",
   description: "Track your reading progress",
-  manifest: "/manifest.json",
+  manifest: "/reading-kg-pwa/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -28,10 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/reading-kg-pwa/icon-192.png" />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <PwaInstallPrompt />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
