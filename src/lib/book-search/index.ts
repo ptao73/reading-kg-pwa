@@ -231,4 +231,4 @@ export async function saveToLibrary(candidate: BookCandidate): Promise<Book | nu
 }
 
 // Re-export types
-export type { BookCandidate, SearchResult };
+export type { BookCandidate };
