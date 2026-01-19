@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { ReaderView } from "@/components/Reader";
@@ -11,8 +11,8 @@ import type { Book } from "@/types/database";
 export default function ReaderPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const params = useParams();
-  const resourceId = params.resourceId as string;
+  const searchParams = useSearchParams();
+  const resourceId = searchParams.get("resourceId");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,6 @@ export default function ReaderPage() {
       setError(null);
 
       try {
-        // Fetch resource
         const { data: resourceData, error: resourceError } = await supabase
           .from("content_resources")
           .select("*")
@@ -47,7 +46,6 @@ export default function ReaderPage() {
 
         setResource(resourceData as ContentResource);
 
-        // Fetch associated book
         const { data: bookData, error: bookError } = await supabase
           .from("books")
           .select("*")
@@ -87,6 +85,17 @@ export default function ReaderPage() {
 
   if (!user) {
     return null;
+  }
+
+  if (!resourceId) {
+    return (
+      <div className="loading-screen">
+        <p>Missing resource id</p>
+        <button onClick={() => router.push("/")} className="btn-primary">
+          Go Home
+        </button>
+      </div>
+    );
   }
 
   if (error) {
