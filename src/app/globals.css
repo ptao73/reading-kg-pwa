@@ -484,3 +484,150 @@ input[type="text"]:focus,
   align-items: center;
   justify-content: center;
 }
+
+/* Current Book Card */
+.current-book-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.current-book-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.current-book-info {
+  margin-bottom: 1.5rem;
+}
+
+.current-book-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.current-book-author {
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.current-book-duration {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.btn-switch-book {
+  width: 100%;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.btn-switch-book:hover {
+  color: var(--text);
+}
+
+/* Prompts */
+.no-book-prompt,
+.next-book-prompt {
+  text-align: center;
+  padding: 1rem 0 1.5rem;
+}
+
+.no-book-prompt h2,
+.next-book-prompt h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.no-book-prompt p,
+.next-book-prompt p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Event History */
+.event-history {
+  margin-top: 1.5rem;
+}
+
+.event-history h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.event-history ul {
+  list-style: none;
+}
+
+.event-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+}
+
+.event-history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.event-history-book {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.event-history-type {
+  font-size: 0.75rem;
+}
+
+.event-type-finished {
+  color: var(--success);
+}
+
+.event-type-ended {
+  color: var(--warning);
+}
+
+.event-history-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.event-history-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-undo {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.btn-undo:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.btn-undo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

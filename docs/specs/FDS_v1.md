@@ -1,192 +1,185 @@
 # Functional Design Specification v1
 
-## 1. Overview
+Project: Reading Behavior & Knowledge Graph PWA
 
-This document describes the functional requirements for Reading KG PWA.
+---
 
-## 2. User Stories
+## 1. Overview（项目目标）
 
-### 2.1 Text Import
+This project is a personal reading behavior capture system, not a reading app.
 
-**As a** user
-**I want to** import text content
-**So that** I can read and study it
+Its purpose is to:
+- Record reading completion behavior with minimal friction
+- Model reading as append-only behavioral events
+- Generate high-quality personal knowledge artifacts for Obsidian
+- Enable long-term analysis of reading habits and preferences
 
-**Acceptance Criteria:**
-- [ ] Support paste from clipboard
-- [ ] Support file upload (.txt, .epub)
-- [ ] Validate and parse text correctly
+This is not:
+- A text reader
+- A study app
+- A vocabulary or annotation tool
+- A social or gamified product
 
-### 2.2 Reading Mode
+---
 
-**As a** user
-**I want to** read text sentence by sentence
-**So that** I can focus on comprehension
+## 2. Core Principles（冻结，不可修改）
 
-**Acceptance Criteria:**
-- [ ] Display one sentence at a time
-- [ ] Navigate forward/backward
-- [ ] Track reading progress
+1. **Behavior over Content**
+   This system records what the user did, not what the book contains.
 
-### 2.3 Word Lookup
+2. **Single-Threaded Reading Model**
+   At any moment, the user reads at most one book.
 
-**As a** user
-**I want to** tap on words for definitions
-**So that** I can learn new vocabulary
+3. **Append-Only Event Log**
+   Reading events are immutable facts.
+   - No UPDATE
+   - No DELETE
+   - Errors are corrected via compensating events
 
-**Acceptance Criteria:**
-- [ ] Click/tap to select word
-- [ ] Show definition popup
-- [ ] Save to vocabulary list
+4. **System-Derived State**
+   Users do not manage reading status manually.
+   Current state is inferred from the event history.
 
-## 3. Technical Requirements
+5. **Minimal, Calm UX**
+   The interface should feel "quiet".
+   The core action is always obvious and singular.
 
-### 3.1 PWA Requirements
+---
 
-- Service worker for offline support
-- App manifest for installation
-- Responsive design
+## 3. Data Model Semantics（语义，而不是表结构）
 
-### 3.2 Data Storage
+### 3.1 Book（稳定实体）
 
-- IndexedDB for local data
-- Optional cloud sync
+A Book is a stable knowledge object.
+- Books may be incomplete or duplicated
+- External metadata is optional
+- Books can be merged later (merged_into)
+- Books do not encode reading status
 
-### 3.3 Performance
+### 3.2 Reading Event（行为事实）
 
-- First contentful paint < 2s
-- Time to interactive < 3s
+A Reading Event represents a moment in time when the user made a decision.
 
-## 4. UI/UX Specifications
+Supported event types:
+- `finished` — completed reading
+- `ended` — consciously abandoned
+- `correction` — compensates a previous event
 
-TBD - Add wireframes and design mockups
+Each event includes:
+- `book_id`
+- `event_type`
+- `occurred_at`
+- `completion` (0–100)
+- `client_event_id` (idempotency)
+
+---
+
+## 4. Reading Behavior Model（核心逻辑）
+
+### 4.1 Default Reading Flow
+
+- When a book is finished or ended, the next book implicitly starts after that moment
+- Reading duration is inferred from timestamps
+- No explicit "start reading" action is required
+
+### 4.2 Abandoning a Book
+
+If the user stops reading a book:
+- An `ended` event is recorded
+- Completion is between 0–99
+- This is a valid, first-class outcome
+
+### 4.3 Re-reading
+
+If a user reads the same book again:
+- A new `finished` or `ended` event is recorded
+- Each read is treated independently
+- Historical events are preserved
+
+---
+
+## 5. Correction & Error Handling（必须支持）
+
+Users can make mistakes.
+
+### 5.1 Correction Mechanism
+
+- No event is ever deleted
+- A `correction` event references a previous event
+- The corrected event is logically cancelled
+- All analytics and exports must respect corrections
+
+This enables:
+- "Undo last action"
+- Fixing wrong book selection
+- Fixing wrong completion timing
+
+---
 
 ## 6. Book Search & Creation Strategy
 
-### 6.1 Design Principle
+### 6.1 Design Philosophy
 
-Book search is a **convenience feature**, not a source of truth.
+Book search is a convenience feature, not a source of truth.
 
-Failure to find a book via external data sources MUST NOT block
-manual book creation or reading event recording.
-
-The system prioritizes:
-- User flow continuity
-- Data correctness over metadata completeness
-- Personal reading behavior over bibliographic perfection
-
-This system is NOT intended to be a public or authoritative book database.
+Failure to find a book MUST NOT block:
+- Manual creation
+- Reading event recording
 
 ---
 
-### 6.2 Search Priority Order (V1)
+### 6.2 Search Priority (V1)
 
-Book lookup MUST follow the priority order below:
+1. **Local Library First (Mandatory)**
+   - Search user's existing books
+   - Language-agnostic (Chinese-friendly)
 
-#### (1) Local Library First (Mandatory)
-- Search MUST first query the user's existing `books` table.
-- This includes:
-  - Previously imported books
-  - Manually created books
-  - Books read or abandoned in the past
+2. **ISBN Lookup (Optional, Best-effort)**
+   - External lookup may fail
+   - Failure is not an error state
 
-Rationale:
-- Highest accuracy for re-reads
-- Fully language-agnostic (Chinese-friendly)
-- No dependency on external services
-
-Local matches MUST always be displayed before any external results.
+3. **Keyword Search (Optional)**
+   - Results are hints only
+   - Metadata is not authoritative
 
 ---
 
-#### (2) ISBN Lookup (Optional, Best-effort)
-If user input matches ISBN format (ISBN-10 or ISBN-13):
+### 6.3 Manual Book Creation (First-Class)
 
-- The system MAY attempt external lookup (e.g. Google Books, Open Library).
-- External lookup is **best-effort only**.
-- External lookup failure MUST NOT interrupt the user flow.
-
-If external lookup fails:
-- The UI MUST offer immediate manual creation.
+- Title is required
+- Author / ISBN optional
+- No external validation required
+- This is a normal path, not a fallback
 
 ---
 
-#### (3) Keyword Search (Optional, Non-blocking)
-For non-ISBN input (title / author keywords):
+### 6.4 Duplicate & Entity Resolution
 
-- External keyword search MAY be attempted.
-- Results are considered **assistive hints only**.
-- Metadata from keyword search is NOT authoritative.
-
-The system MUST NOT assume correctness of:
-- Titles
-- Authors
-- Editions
-- Translations
+- Duplicate books are expected
+- `merged_into` supports post-hoc resolution
+- Reading events remain attached to original IDs
 
 ---
 
-### 6.3 Manual Book Creation (Mandatory Fallback)
+## 7. Explicit Non-Goals（V1 范围外）
 
-At any time, the user MUST be able to manually create a book record.
-
-Manual creation MUST require:
-- `title` (required)
-
-Manual creation MAY include:
-- `author`
-- `isbn`
-
-Manual creation MUST NOT require:
-- External validation
-- Successful search result
-- Network connectivity
-
-Manual creation is a **first-class path**, not an error state.
+The following are explicitly OUT OF SCOPE:
+- Text import (txt / epub / pdf)
+- Sentence-by-sentence reading
+- Word lookup or vocabulary lists
+- Annotations or highlights
+- Social features or sharing
+- Gamification or streaks
+- Full bibliographic correctness
+- OCR or cover recognition
 
 ---
 
-### 6.4 Duplicate & Entity Resolution Policy
+## 8. Success Criteria（验收标准）
 
-Due to inconsistencies in external data sources (especially for Chinese books):
-
-- Duplicate book entries are expected and acceptable.
-- The system MUST support post-hoc entity resolution via:
-  - `merged_into` field on `books`.
-
-Rules:
-- `merged_into` indicates a non-canonical duplicate book.
-- Reading events MUST remain attached to their original book_id.
-- During analytics and export:
-  - Books MUST be resolved to their ultimate master entity.
-
-Duplicate detection is NOT required in V1.
-Manual merging is sufficient.
-
----
-
-### 6.5 Internationalization & Language Assumptions
-
-The system MUST NOT assume:
-- English-only titles
-- Latin alphabets
-- Stable romanization
-
-Chinese book titles, authors, and publishers are first-class citizens.
-
-Search UX MUST:
-- Prefer exact local matches
-- Avoid aggressive normalization
-- Avoid forced translation or transliteration
-
----
-
-### 6.6 Non-Goals (Explicit)
-
-The following are explicitly OUT OF SCOPE for V1:
-- Full Chinese bibliographic coverage
-- ISBN correctness enforcement
-- Official integration with regional book platforms (e.g. Douban)
-- OCR-based cover recognition
-
-These MAY be explored in future versions but MUST NOT block V1 delivery.
+This version is successful if:
+- User can record Finished / Ended with one tap
+- System infers reading durations automatically
+- Errors can be corrected without data loss
+- Obsidian export can reconstruct reading history
+- The UI remains calm, minimal, and focused
