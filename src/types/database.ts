@@ -2,12 +2,23 @@
 
 export type ReadingEventType = "finished" | "ended" | "correction";
 
+// Region hint for edition ranking: HK/TW > CN > EN/OTHER
+export type RegionHint = "HK" | "TW" | "CN" | "EN" | "OTHER";
+
 export interface Book {
   id: string;
   user_id: string;
   title: string;
   author: string | null;
-  isbn: string | null;
+  // V2: Extended metadata
+  publisher: string | null;
+  publish_year: number | null;
+  language: string | null;
+  region_hint: RegionHint | null;
+  isbn: string | null;      // Legacy field
+  isbn10: string | null;    // V2: ISBN-10
+  isbn13: string | null;    // V2: ISBN-13
+  cover: string | null;     // V2: Cover image URL
   merged_into: string | null;
   created_at: string;
   updated_at: string;
@@ -31,7 +42,14 @@ export type BookInsert = {
   user_id: string;
   title: string;
   author?: string | null;
+  publisher?: string | null;
+  publish_year?: number | null;
+  language?: string | null;
+  region_hint?: RegionHint | null;
   isbn?: string | null;
+  isbn10?: string | null;
+  isbn13?: string | null;
+  cover?: string | null;
   merged_into?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -42,7 +60,14 @@ export type BookUpdate = {
   user_id?: string;
   title?: string;
   author?: string | null;
+  publisher?: string | null;
+  publish_year?: number | null;
+  language?: string | null;
+  region_hint?: RegionHint | null;
   isbn?: string | null;
+  isbn10?: string | null;
+  isbn13?: string | null;
+  cover?: string | null;
   merged_into?: string | null;
   created_at?: string;
   updated_at?: string;
