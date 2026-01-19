@@ -1366,3 +1366,163 @@ input[type="text"]:focus,
 .reader-light .pdf-canvas {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
+
+/* ============================= */
+/* Streak Display Styles         */
+/* ============================= */
+
+.streak-loading {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.streak-display {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Compact mode (header widget) */
+.streak-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.streak-icon {
+  font-size: 1.25rem;
+}
+
+.streak-count {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.streak-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 300px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Stats row */
+.streak-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.streak-stat {
+  text-align: center;
+}
+
+.streak-stat-main {
+  transform: scale(1.1);
+}
+
+.streak-stat-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.streak-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.streak-stat-main .streak-stat-value {
+  color: var(--warning);
+}
+
+.streak-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Today's progress */
+.streak-today {
+  margin-bottom: 1rem;
+}
+
+.streak-today-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.streak-progress-bar {
+  height: 8px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.streak-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.streak-progress-fill.streak-complete {
+  background: var(--success);
+}
+
+.streak-today-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Calendar heatmap */
+.streak-calendar {
+  margin-top: 1rem;
+}
+
+.streak-calendar-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.streak-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+}
+
+.streak-day {
+  aspect-ratio: 1;
+  background: var(--bg-input);
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.streak-day-active {
+  background: var(--success);
+}
+
+.streak-day-today {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}

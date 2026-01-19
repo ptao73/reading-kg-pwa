@@ -10,6 +10,7 @@ import { TxtReader } from "./TxtReader";
 import { EpubReader } from "./EpubReader";
 import { PdfReader } from "./PdfReader";
 import { ReaderControls } from "./ReaderControls";
+import { startReadingSession, endReadingSession } from "@/lib/session-tracker";
 import type {
   ContentResource,
   ParsedContent,
@@ -122,6 +123,15 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
 
     loadContent();
   }, [resource]);
+
+  // Start/end reading session for streak tracking
+  useEffect(() => {
+    startReadingSession(resource.id);
+
+    return () => {
+      endReadingSession();
+    };
+  }, [resource.id]);
 
   // Save progress to Supabase
   const saveProgress = useCallback(

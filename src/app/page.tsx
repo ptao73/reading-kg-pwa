@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { ReadingFlow } from "@/components/ReadingFlow";
+import { StreakDisplay } from "@/components/StreakDisplay";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -32,7 +33,7 @@ export default function Home() {
       <header className="header">
         <h1>Reading KG</h1>
         <div className="user-menu">
-          <span className="user-email">{user.email}</span>
+          <StreakDisplay compact />
           <button onClick={signOut} className="btn-signout">
             Sign Out
           </button>
