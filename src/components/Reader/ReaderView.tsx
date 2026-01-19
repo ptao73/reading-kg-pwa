@@ -5,8 +5,10 @@ import { supabase } from "@/lib/supabase";
 import { getParsedContent, getFile } from "@/lib/indexeddb";
 import { parseTxt } from "@/lib/import/txt-parser";
 import { parseEpub } from "@/lib/import/epub-parser";
+import { parsePdf } from "@/lib/import/pdf-parser";
 import { TxtReader } from "./TxtReader";
 import { EpubReader } from "./EpubReader";
+import { PdfReader } from "./PdfReader";
 import { ReaderControls } from "./ReaderControls";
 import type {
   ContentResource,
@@ -28,6 +30,7 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [content, setContent] = useState<ParsedContent | null>(null);
+  const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
   const [progress, setProgress] = useState<ReadingProgress | null>(null);
   const [fontSize, setFontSize] = useState(18);
   const [theme, setTheme] = useState<ReaderTheme>("dark");
@@ -44,7 +47,23 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
         // 1. Try to get parsed content from IndexedDB
         let parsed = await getParsedContent(resource.id);
 
-        // 2. If not found, re-parse from file
+        // 2. For PDF, we always need the raw file buffer for rendering
+        if (resource.type === "pdf") {
+          const file = await getFile(resource.file_hash);
+          if (!file) {
+            setError("PDF file not found. Please re-import the file.");
+            return;
+          }
+          setPdfBuffer(file.data);
+
+          // Parse if not already parsed
+          if (!parsed) {
+            const result = await parsePdf(file.data, resource.id);
+            parsed = result.parsed;
+          }
+        }
+
+        // 3. If not found (non-PDF), re-parse from file
         if (!parsed) {
           const file = await getFile(resource.file_hash);
           if (!file) {
@@ -58,7 +77,7 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
           } else if (resource.type === "epub") {
             const result = await parseEpub(file.data, resource.id);
             parsed = result.parsed;
-          } else {
+          } else if (resource.type !== "pdf") {
             setError(`${resource.type.toUpperCase()} reader not yet implemented`);
             return;
           }
@@ -187,8 +206,9 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
     );
   }
 
-  // Error state
-  if (error || !content) {
+  // Error state (PDF can work with just the buffer)
+  const hasContent = content || (resource.type === "pdf" && pdfBuffer);
+  if (error || !hasContent) {
     return (
       <div className={`reader-container reader-${theme}`}>
         <div className="reader-error">
@@ -229,8 +249,8 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
         />
       )}
 
-      {/* Table of Contents */}
-      {showToc && (
+      {/* Table of Contents (not shown for PDF) */}
+      {showToc && content && resource.type !== "pdf" && (
         <div className="reader-toc-overlay" onClick={() => setShowToc(false)}>
           <div className="reader-toc" onClick={(e) => e.stopPropagation()}>
             <h3>目录</h3>
@@ -257,7 +277,7 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
       )}
 
       {/* Reader content based on type */}
-      {resource.type === "txt" && (
+      {resource.type === "txt" && content && (
         <TxtReader
           content={content}
           initialPosition={progress?.current_position}
@@ -266,11 +286,19 @@ export function ReaderView({ resource, book, onClose }: ReaderViewProps) {
         />
       )}
 
-      {resource.type === "epub" && (
+      {resource.type === "epub" && content && (
         <EpubReader
           content={content}
           initialPosition={progress?.current_position}
           fontSize={fontSize}
+          onPositionChange={handlePositionChange}
+        />
+      )}
+
+      {resource.type === "pdf" && pdfBuffer && (
+        <PdfReader
+          fileBuffer={pdfBuffer}
+          initialPosition={progress?.current_position}
           onPositionChange={handlePositionChange}
         />
       )}

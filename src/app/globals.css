@@ -1237,3 +1237,132 @@ input[type="text"]:focus,
 .epub-nav-next {
   text-align: right;
 }
+
+/* ============================= */
+/* PDF Reader Styles             */
+/* ============================= */
+
+.pdf-reader {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+}
+
+.pdf-reader-loading,
+.pdf-reader-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.pdf-reader-error {
+  color: var(--danger);
+}
+
+.pdf-page-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.pdf-nav-btn {
+  background: var(--bg-input);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: 1rem;
+}
+
+.pdf-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pdf-page-number {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.pdf-page-input {
+  width: 50px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.pdf-page-input::-webkit-inner-spin-button,
+.pdf-page-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pdf-zoom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.pdf-zoom-btn {
+  background: var(--bg-input);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-zoom-level {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  min-width: 45px;
+  text-align: center;
+}
+
+.pdf-canvas-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  background: #333;
+}
+
+.pdf-canvas {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: white;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Light theme adjustments for PDF */
+.reader-light .pdf-canvas-container {
+  background: #e5e5e5;
+}
+
+.reader-light .pdf-canvas {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}

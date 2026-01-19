@@ -8,6 +8,7 @@ import {
 } from "@/lib/indexeddb";
 import { parseTxt } from "./txt-parser";
 import { parseEpub } from "./epub-parser";
+import { parsePdf } from "./pdf-parser";
 import type {
   ContentResource,
   ContentResourceType,
@@ -129,9 +130,14 @@ export async function importFile(
         // So we just use it for immediate display if needed
         break;
       }
-      case "pdf":
-        // TODO: Implement PDF parsing
-        return { success: false, error: "PDF support coming soon" };
+      case "pdf": {
+        const { parsed: pdfParsed, structure: pdfStructure } =
+          await parsePdf(buffer, resourceId);
+        parsedStructure = pdfStructure;
+
+        // Note: parsed content is already stored in parsePdf
+        break;
+      }
       default:
         return { success: false, error: "Unsupported file type" };
     }
