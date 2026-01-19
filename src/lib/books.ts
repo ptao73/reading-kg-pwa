@@ -4,7 +4,8 @@ import type { Book, BookUpdate } from "@/types/database";
 export async function createBook(
   title: string,
   author?: string,
-  isbn?: string
+  isbn?: string,
+  publisher?: string
 ): Promise<Book | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -14,6 +15,7 @@ export async function createBook(
     title,
     author: author ?? null,
     isbn: isbn ?? null,
+    publisher: publisher ?? null,
     merged_into: null,
   };
 
