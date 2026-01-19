@@ -47,8 +47,9 @@ export async function parsePdf(
 
   // Get document metadata
   const metadata = await pdf.getMetadata().catch(() => null);
-  const title = metadata?.info?.Title || undefined;
-  const author = metadata?.info?.Author || undefined;
+  const info = metadata?.info as { Title?: string; Author?: string } | undefined;
+  const title = info?.Title || undefined;
+  const author = info?.Author || undefined;
 
   // Try to get outline (table of contents)
   const outline = await pdf.getOutline().catch(() => null);
