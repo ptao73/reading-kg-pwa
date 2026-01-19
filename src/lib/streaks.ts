@@ -144,13 +144,12 @@ async function getReadingDays(
 
   // Get all events grouped by date
   const { data: events } = await supabase
-    .from("events")
-    .select("timestamp")
-    .eq("user_id", userId)
-    .in("event_type", ["Finished", "Ended", "Started"]);
+    .from("valid_reading_events")
+    .select("occurred_at")
+    .eq("user_id", userId);
 
   for (const event of events ?? []) {
-    const date = event.timestamp.split("T")[0];
+    const date = event.occurred_at.split("T")[0];
     if (!days[date]) {
       days[date] = { date, minutes: 0, hasEvent: true };
     } else {
@@ -178,12 +177,11 @@ async function hasTodayEvent(userId: string): Promise<boolean> {
   const tomorrow = formatDate(new Date(Date.now() + 86400000));
 
   const { count } = await supabase
-    .from("events")
+    .from("valid_reading_events")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .gte("timestamp", today)
-    .lt("timestamp", tomorrow)
-    .in("event_type", ["Finished", "Ended", "Started"]);
+    .gte("occurred_at", today)
+    .lt("occurred_at", tomorrow);
 
   return (count ?? 0) > 0;
 }
@@ -234,11 +232,10 @@ export async function getReadingHistory(
 
   // Get events
   const { data: events } = await supabase
-    .from("events")
-    .select("timestamp")
+    .from("valid_reading_events")
+    .select("occurred_at")
     .eq("user_id", user.id)
-    .gte("timestamp", startDate)
-    .in("event_type", ["Finished", "Ended", "Started"]);
+    .gte("occurred_at", startDate);
 
   const history: Record<string, { minutes: number; checkedIn: boolean }> = {};
 
@@ -253,7 +250,7 @@ export async function getReadingHistory(
 
   // Check events
   for (const event of events ?? []) {
-    const date = event.timestamp.split("T")[0];
+    const date = event.occurred_at.split("T")[0];
     if (!history[date]) {
       history[date] = { minutes: 0, checkedIn: true };
     } else {
