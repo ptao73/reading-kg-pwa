@@ -38,8 +38,8 @@ interface GoogleBooksSearchResponse {
 // ============================================
 
 function inferRegionHint(
-  publisher?: string,
-  language?: string
+  publisher?: string | null,
+  language?: string | null
 ): RegionHint | null {
   if (!publisher && !language) return null;
 

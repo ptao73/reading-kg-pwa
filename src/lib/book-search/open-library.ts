@@ -38,8 +38,8 @@ interface OpenLibraryISBNResponse {
 // ============================================
 
 function inferRegionHint(
-  publisher?: string,
-  language?: string
+  publisher?: string | null,
+  language?: string | null
 ): RegionHint | null {
   if (!publisher && !language) return null;
 
@@ -135,16 +135,16 @@ export async function searchOpenLibrary(
     return data.docs.map((doc) => {
       const isbn = doc.isbn?.[0];
       const { isbn10, isbn13 } = isbn ? normalizeISBN(isbn) : { isbn10: null, isbn13: null };
-      const publisher = doc.publisher?.[0] ?? null;
-      const language = doc.language?.[0] ?? null;
+      const publisher = doc.publisher?.[0];
+      const language = doc.language?.[0];
 
       return {
         source: "open_library" as const,
         title: doc.title,
         author: doc.author_name?.join(", ") ?? null,
-        publisher,
+        publisher: publisher ?? null,
         publish_year: doc.first_publish_year ?? doc.publish_year?.[0] ?? null,
-        language,
+        language: language ?? null,
         region_hint: inferRegionHint(publisher, language),
         isbn10,
         isbn13,
@@ -201,16 +201,16 @@ export async function lookupOpenLibraryISBN(
     }
 
     const { isbn10, isbn13 } = normalizeISBN(cleaned);
-    const publisher = data.publishers?.[0] ?? null;
-    const language = data.languages?.[0]?.key?.replace("/languages/", "") ?? null;
+    const publisher = data.publishers?.[0];
+    const language = data.languages?.[0]?.key?.replace("/languages/", "");
 
     return {
       source: "open_library",
       title: data.title ?? "Unknown Title",
       author: authorName,
-      publisher,
+      publisher: publisher ?? null,
       publish_year: extractYear(data.publish_date),
-      language,
+      language: language ?? null,
       region_hint: inferRegionHint(publisher, language),
       isbn10,
       isbn13,
