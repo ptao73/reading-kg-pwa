@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { ReaderView } from "@/components/Reader";
@@ -11,13 +11,17 @@ import type { Book } from "@/types/database";
 export default function ReaderPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const resourceId = searchParams.get("resourceId");
+  const [resourceId, setResourceId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resource, setResource] = useState<ContentResource | null>(null);
   const [book, setBook] = useState<Book | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setResourceId(params.get("resourceId"));
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -27,7 +31,10 @@ export default function ReaderPage() {
 
   useEffect(() => {
     async function loadResource() {
-      if (!resourceId || !user) return;
+      if (!resourceId || !user) {
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       setError(null);
